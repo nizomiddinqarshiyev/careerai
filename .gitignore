@@ -1,0 +1,34 @@
+# Python fayllari
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.env
+*.venv/
+.env
+venv/
+ENV/
+env/
+*.egg-info/
+
+
+# IDE fayllari
+.vscode/
+.idea/
+
+# OS fayllari
+.DS_Store
+Thumbs.db
+
+# Loglar
+*.log
+
+# Replit yoki boshqa servis fayllari
+*.replit
+.replit/
+file/certificate
+file/certificates/
+
+certificate/migrations/
+users/migrations/
+ai/migrations/
