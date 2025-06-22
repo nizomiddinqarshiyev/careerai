@@ -26,9 +26,10 @@ Thumbs.db
 # Replit yoki boshqa servis fayllari
 *.replit
 .replit/
-file/certificate
-file/certificates/
 
 certificate/migrations/
 users/migrations/
 ai/migrations/
+quiz/migrations/
+
+file/
