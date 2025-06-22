@@ -59,7 +59,7 @@ class AdminSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ('id', 'email', 'first_name', 'last_name', 'phone_number', 'certificate', 'password')
+        fields = ('id', 'email', 'first_name', 'last_name', 'phone_number', 'password')
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
@@ -103,3 +103,4 @@ class CustomTokenObtainPairSerializer(serializers.Serializer):
             'role': user.get_role(),
             'user_id': user.id,
         }
+

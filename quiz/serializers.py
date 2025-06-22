@@ -1,17 +1,34 @@
 from rest_framework import serializers
-from .models import Options, Question, Type, Test, Careers, RoadMaps,\
-    Body, TestItem, TestResult, Lesson, DoneCourse, Course
 
+from ai.ai import chatbot_first
+from ai.models import Text
+from users.serializers import UserSerializer
+from .models import Options, Question, Type, Test, Careers, RoadMaps, \
+    Body, TestItem, TestResult, Lesson, DoneCourse, Course, CareerTestItem, CareerTestResult
 
-class OptionsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Options
-        fields = '__all__'
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 class QuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
         fields = '__all__'
+
+class OptionsSerializer(serializers.ModelSerializer):
+    # question = QuestionSerializer()
+    class Meta:
+        model = Options
+        fields = ['id', 'A_B_option']
+
+class QuestionsOptionSerializer(serializers.ModelSerializer):
+    options = serializers.SerializerMethodField()
+    class Meta:
+        model = Question
+        fields = ['id', 'question', 'options']
+
+    def get_options(self, obj):
+        options = Options.objects.filter(question=obj)
+        return OptionsSerializer(options, many=True).data
 
 class TypeSerializer(serializers.ModelSerializer):
     class Meta:
@@ -19,6 +36,7 @@ class TypeSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class TestSerializer(serializers.ModelSerializer):
+    type = TypeSerializer()
     class Meta:
         model = Test
         fields = '__all__'
@@ -40,17 +58,32 @@ class BodySerializer(serializers.ModelSerializer):
         model = Body
         fields = '__all__'
 
+class CareerTestItemSerializer(serializers.ModelSerializer):
+    test = TestSerializer(read_only=True, many=False)
+    career = CareersSerializer(read_only=True, many=False)
+    question = QuestionsOptionSerializer(read_only=True, many=False)
+    class Meta:
+        model = CareerTestItem
+        fields = '__all__'
+
 class TestItemSerializer(serializers.ModelSerializer):
-    user = serializers.HyperlinkedRelatedField(
-        many=True,
-        read_only=True,
-        view_name='track-detail'
-    )
+    test = TestSerializer(read_only=True, many=False)
+    question = QuestionsOptionSerializer(read_only=True, many=False)
     class Meta:
         model = TestItem
         fields = '__all__'
 
-class TestResultSerializer(serializers.HyperlinkedModelSerializer):
+class CareerTestResultSerializer(serializers.ModelSerializer):
+    careertest = CareerTestItemSerializer(read_only=True, many=False)
+    career = CareersSerializer(read_only=True, many=False)
+    user = UserSerializer(read_only=True, many=False)
+    class Meta:
+        model = CareerTestResult
+        fields = '__all__'
+
+class TestResultSerializer(serializers.ModelSerializer):
+    test = TestSerializer(read_only=True, many=False)
+    user = UserSerializer(read_only=True, many=False)
     class Meta:
         model = TestResult
         fields = '__all__'
@@ -68,7 +101,33 @@ class CourseSerializer(serializers.ModelSerializer):
 
 
 class DoneCourseSerializer(serializers.ModelSerializer):
+    course = CourseSerializer(read_only=True, many=False)
+    user = UserSerializer(read_only=True, many=False)
     class Meta:
         model = DoneCourse
         fields = '__all__'
 
+class DoneCoursePOSTSerializer(serializers.ModelSerializer):
+    course = CourseSerializer(read_only=True)
+    user = UserSerializer(read_only=True)
+    course_id = serializers.PrimaryKeyRelatedField(
+        queryset=Course.objects.all(), write_only=True, source='course'
+    )
+    user_id = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(), write_only=True, source='user'
+    )
+
+    class Meta:
+        model = DoneCourse
+        fields = ['id', 'course', 'user', 'points', 'end_course', 'course_id', 'user_id']
+
+
+class TestResultPOSTSerializer(serializers.ModelSerializer):
+    test = TestSerializer(read_only=True, many=False)
+    user = UserSerializer(read_only=True, many=False)
+    class Meta:
+        model = TestResult
+        fields = '__all__'
+
+    def save(self, **kwargs):
+        ai_analysis = chatbot_first(self.answer, Text.objects.all()[0])

@@ -14,5 +14,6 @@ urlpatterns = [
     path('admin/<int:pk>/', AdminDetailView.as_view(), name='admin_detail'),
     # path('moderator/<int:pk>/', ModeratorDetailView.as_view(), name='moderator_detail'),
     path('user/<int:pk>/', UserDetailView.as_view(), name='user_detail'),
+    # path('login/', CustomTokenObtainPairView.as_view(), name='login'),
     path('login/', CustomTokenObtainPairView.as_view(), name='login'),
 ]

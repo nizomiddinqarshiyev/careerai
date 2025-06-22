@@ -1,51 +1,41 @@
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from .models import Text
-# from quiz.models import Question, Options
-from openai import OpenAI
 import os
 from dotenv import load_dotenv
-load_dotenv()
+from openai import OpenAI
+from .models import Text
 
+load_dotenv()
 gpt_key = os.getenv("GPT_KEY")
+MODEL = "gpt-3.5-turbo"  # yoki  "gpt-4o"byudjetga qarab
+
+client = OpenAI(api_key=gpt_key)
+
+def generate_gpt_response(user_message, system_field="system_text", text_field="prompt_text"):
+    # Matnlarni modeldan olish
+    system_text = Text.objects.values_list(system_field, flat=True).first() or ""
+    prompt_text = Text.objects.values_list(text_field, flat=True).first() or ""
+
+    # Xabarlar ketma-ketligi
+    messages = [
+        {
+            "role": "system",
+            "content": (
+               f"{system_text}"
+            )
+        },
+        {"role": "user", "content": f"{prompt_text}\n\n{user_message}"}
+    ]
+
+    # ChatGPT API orqali javob olish
+    response = client.chat.completions.create(
+        model=MODEL,
+        messages=messages,
+        temperature=0.5,
+    )
+    return response.choices[0].message.content
+
 
 def chatbot_first(message):
-    # questions = Question.objects.all()
-    # options = Options.objects.all()
-
-    text = Text.objects.values_list("text")
-    system = Text.objects.values_list("system")
-    # question_str = "\n".join([str(question) for question in questions])
-    # options_str = "\n".join([str(option) for option in options])
-    MODEL = "gpt-3.5-turbo"
-    client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", gpt_key))
-
-    response = client.chat.completions.create(
-        model=MODEL,
-        messages=[
-
-            {"role": "system", "content": f'''{system}'''},
-            {"role": "user", "content": f'''{text} {message}'''},
-        ],
-        temperature=0,
-    )
-
-    return response.choices[0].message.content
-
+    return generate_gpt_response(message, "system", "text")
 
 def chatbot_second(message):
-    MODEL = "gpt-3.5-turbo"
-    client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", gpt_key))
-    text = Text.objects.values_list("text2")
-    system = Text.objects.values_list("system")
-    response = client.chat.completions.create(
-        model=MODEL,
-        messages=[
-
-            {"role": "system", "content": f'''{system}'''},
-            {"role": "user", "content": f'''{text} {message}'''},
-        ],
-        temperature=0,
-    )
-
-    return response.choices[0].message.content
+    return generate_gpt_response(message, "system", "text2")

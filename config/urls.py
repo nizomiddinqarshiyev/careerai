@@ -21,17 +21,28 @@ from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework_simplejwt.views import TokenRefreshView, TokenObtainPairView
 
+from django.conf.urls import handler404
+from django.shortcuts import render
+#
+# def custom_404_view(request, exception):
+#     return render(request, "404.html", status=404)
+
+# handler404 = custom_404_view
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('quiz.urls')),
     path('api/', include('users.urls')),
-    path('api/', include('ai.urls')),
+    # path('api/', include('ai.urls')),
     path('api/', include('certificate.urls')),
+
+    # path('ckeditor5/', include('ckeditor_uploader.urls')),
 
     # path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/swagger/', SpectacularSwaggerView.as_view(url_name='schema')),
+
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

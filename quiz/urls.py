@@ -3,7 +3,8 @@ from .views import OptionsListView, OptionsDetailView, QuestionListView, Questio
     TypeDetailView, TestListView, TestDetailView, CareersListView, CareersDetailView, RoadMapsListView, \
     RoadMapsDetailView, BodyListView, BodyDetailView, TestItemDetailView, TestItemCreateView, TestItemListView, \
     TestResultView, CourseListCreateAPIView, CourseRetrieveUpdateDestroyAPIView, LessonListCreateAPIView, \
-    LessonRetrieveUpdateDestroyAPIView, DoneCareerListCreateAPIView, DoneCareerRetrieveUpdateDestroyAPIView
+    LessonRetrieveUpdateDestroyAPIView, DoneCourseListCreateAPIView, DoneCourseRetrieveUpdateDestroyAPIView, \
+    AnalyzeTestResultAPIView, CareerTestItemCareersListView, AnalyzeCareerTestResultAPIView
 
 urlpatterns = [
     path('options/', OptionsListView.as_view(), name='options-list'),
@@ -25,16 +26,19 @@ urlpatterns = [
     path('test-items/', TestItemListView.as_view(), name='test-item'),
     path('add-test-item/', TestItemCreateView.as_view(), name='test-item'),
     path('test-item-detail/<int:pk>/', TestItemDetailView.as_view(), name='test-item'),
-    path('test-result/<int:pk>/', TestResultView.as_view(), name='test-result'),
-
-    path('api/courses/', CourseListCreateAPIView.as_view(), name='course-list-create'),
-    path('api/courses/<int:pk>/', CourseRetrieveUpdateDestroyAPIView.as_view(), name='course-detail'),
-
+    path('test-result/', TestResultView.as_view(), name='test-result'),
+    # path('test-result/<int:pk>/', TestResultListCreateAPIView.as_view(), name='test-result'),
+    path('analyze-test/', AnalyzeTestResultAPIView.as_view(), name='analyze-test'),
+    path('testcareer-items/', CareerTestItemCareersListView.as_view(), name='testcareer-items'),
+    path('courses/', CourseListCreateAPIView.as_view(), name='course-list-create'),
+    path('courses/<int:pk>/', CourseRetrieveUpdateDestroyAPIView.as_view(), name='course-detail'),
+    path('careers-testresult/', AnalyzeCareerTestResultAPIView.as_view(), name='careers-testresult'),
     # Lessons
     path('lessons/', LessonListCreateAPIView.as_view(), name='lesson-list-create'),
     path('lessons/<int:pk>/', LessonRetrieveUpdateDestroyAPIView.as_view(), name='lesson-detail'),
 
     # Done Careers
-    path('done-courses/', DoneCareerListCreateAPIView.as_view(), name='done-course-list-create'),
-    path('done-courses/<int:pk>/', DoneCareerRetrieveUpdateDestroyAPIView.as_view(), name='done-course-detail'),
+    path('done-courses/', DoneCourseListCreateAPIView.as_view(), name='done-course-list-create'),
+    path('done-courses/<int:pk>/', DoneCourseRetrieveUpdateDestroyAPIView.as_view(), name='done-course-detail'),
+
 ]

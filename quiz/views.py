@@ -3,12 +3,22 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 
 from .models import Options, Question, Type, Test, Careers, RoadMaps, Body, TestItem, TestResult, Lesson, Course, \
-    DoneCourse
+    DoneCourse, CareerTest, CareerTestResult, CareerTestItem
 from .serializers import OptionsSerializer, QuestionSerializer, TypeSerializer, TestSerializer, CareersSerializer, \
-    RoadMapsSerializer, BodySerializer, TestItemSerializer, LessonSerializer, CourseSerializer, DoneCourseSerializer
+    RoadMapsSerializer, BodySerializer, CareerTestItemSerializer, LessonSerializer, CourseSerializer, \
+    DoneCourseSerializer, \
+    DoneCoursePOSTSerializer, TestResultSerializer, TestItemSerializer, CareerTestResultSerializer
 from rest_framework import generics, viewsets
 from rest_framework import permissions
 # Create your views here.
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status, permissions
+from .models import TestResult, Test
+from .serializers import TestResultSerializer
+from ai.ai import chatbot_first
+
+
 
 
 class OptionsListView(generics.ListCreateAPIView):
@@ -95,33 +105,151 @@ class BodyDetailView(generics.RetrieveUpdateDestroyAPIView):
 class TestItemListView(generics.ListCreateAPIView):
     queryset = TestItem.objects.all()
     serializer_class = TestItemSerializer
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
 class TestItemDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = TestItem.objects.all()
     serializer_class = TestItemSerializer
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
-class TestItemCreateView(generics.CreateAPIView):
+
+class TestItemCreateView(generics.ListCreateAPIView):
     queryset = TestItem.objects.all()
     serializer_class = TestItemSerializer
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
-class TestResultView(generics.RetrieveUpdateDestroyAPIView):
+class TestResultView(generics.ListCreateAPIView):
     queryset = TestResult.objects.all()
-    serializer_class = TestItemSerializer
-    # permission_classes = [permissions.IsAuthenticated]
+    serializer_class = TestResultSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-# class LessonAPIView(APIView):
-#     queryset = Lesson.objects.all()
-#     serializer_class = LessonSerializer
-#     def get(self, request, *args, **kwargs):
-#         serializer = self.get_serializer(data=request.data)
-#         serializer.is_valid(raise_exception=True)
-#         token = request.GET.get("token")
-#         lessons = Lesson.objects.filter()
-#         lessons_serializer = serializer(lessons, many=True)
-#         return
+# class TestResultListCreateAPIView(generics.ListCreateAPIView):
+#     serializer_class = TestResultSerializer
+#
+#     def get_queryset(self):
+#         test = self.request.query_params.get('test')
+#         user = self.request.user
+#         queryset = TestResult.objects.filter(user=user)
+#         if test:
+#             queryset = queryset.filter(test=test)
+#         return queryset
+#
+#     def perform_create(self, serializer):
+#         serializer.save(user=self.request.user)
+
+
+
+
+
+
+
+
+
+
+
+
+class CareerTestItemCareersListView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = CareerTestItemSerializer
+    def get(self, request):
+        test_id = request.data.get('test_id')
+        career_id = request.data.get('career_id')
+        try:
+            queryset = CareerTestItem.objects.filter(test_id=test_id, career_id=career_id)
+            return Response(CareerTestItemSerializer(queryset, many=True).data, status=status.HTTP_200_OK)
+        except TestItem.DoesNotExist as e:
+            return Response({'error': 'Bad requests'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AnalyzeTestResultAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = TestResultSerializer
+    def post(self, request):
+        user = request.user
+        test_id = request.data.get('test_id')
+        answer = request.data.get('answer')
+
+        # Test mavjudligini tekshiramiz
+        try:
+            test = Test.objects.get(id=test_id)
+        except Test.DoesNotExist:
+            return Response({"error": "Test topilmadi"}, status=status.HTTP_404_NOT_FOUND)
+
+        # AI orqali tahlil qilish
+        try:
+            ai_analysis = chatbot_first(answer)
+        except Exception as e:
+            return Response({"error": f"AI xatoligi: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # Natijani saqlash
+        result = TestResult.objects.create(
+            user=user,
+            test=test,
+            answer=answer,
+            ai_analysis=ai_analysis
+        )
+
+        serializer = TestResultSerializer(result)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class AnalyzeCareerTestResultAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = CareerTestResultSerializer
+    def post(self, request):
+        user = request.user
+        test_id = request.data.get('test_id')
+        career_id = request.data.get('career_id')
+        answer = request.data.get('answer')
+
+        # Test mavjudligini tekshiramiz
+        try:
+            test = CareerTest.objects.get(id=test_id)
+        except Test.DoesNotExist:
+            return Response({"error": "Test topilmadi"}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            career = Careers.objects.get(id=career_id)
+        except Careers.DoesNotExist:
+            return Response({'error': 'Career not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        # AI orqali tahlil qilish
+        try:
+            ai_analysis = chatbot_first(answer)
+        except Exception as e:
+            return Response({"error": f"AI xatoligi: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+        # Natijani saqlash
+        result = CareerTestResult.objects.create(
+            user=user,
+            test=test,
+            answer=answer,
+            ai_analysis=ai_analysis,
+            career=career
+        )
+        serializer = CareerTestResultSerializer(result)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class LessonListCreateAPIView(generics.ListCreateAPIView):
+    queryset = Lesson.objects.all()
+    serializer_class = LessonSerializer
+
+# Lessons
+class LessonRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Lesson.objects.all()
+    serializer_class = LessonSerializer
+
+class DoneCourseListCreateAPIView(generics.ListCreateAPIView):
+    queryset = DoneCourse.objects.all()
+    serializer_class = DoneCoursePOSTSerializer
+
+
+# Done Careers
+class DoneCourseRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = DoneCourse.objects.all()
+    serializer_class = DoneCourseSerializer
 
 
 class CourseListCreateAPIView(generics.ListCreateAPIView):
@@ -131,23 +259,3 @@ class CourseListCreateAPIView(generics.ListCreateAPIView):
 class CourseRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
-
-
-# Lessons
-class LessonListCreateAPIView(generics.ListCreateAPIView):
-    queryset = Lesson.objects.all()
-    serializer_class = LessonSerializer
-
-class LessonRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Lesson.objects.all()
-    serializer_class = LessonSerializer
-
-
-# Done Careers
-class DoneCareerListCreateAPIView(generics.ListCreateAPIView):
-    queryset = DoneCourse.objects.all()
-    serializer_class = DoneCourseSerializer
-
-class DoneCareerRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = DoneCourse.objects.all()
-    serializer_class = DoneCourseSerializer

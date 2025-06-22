@@ -36,7 +36,6 @@ class CustomUser(AbstractUser):
         ('cadet', 'kursant'),
         ('admin', 'admin')
     ]
-    certificate = models.FileField(upload_to='certificates/', blank=True, null=True)
     # is_admin = models.BooleanField(default=False)
     # is_superadmin = models.BooleanField(default=False)
     # is_staff = models.BooleanField(default=False)

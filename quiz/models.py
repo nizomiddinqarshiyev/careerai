@@ -1,8 +1,9 @@
 from django.db import models
 
+from certificate.models import Certificate
 from users.models import CustomUser
-
-
+# from django_ckeditor_5.fields import CKEditor5Field
+from ckeditor.fields import RichTextField
 # from rest_framework.authtoken.admin import User
 # from django.contrib.auth.models import User
 
@@ -12,10 +13,58 @@ from users.models import CustomUser
 class Careers(models.Model):
     name = models.TextField()
     info = models.TextField()
+    image = models.FileField(upload_to='careers', blank=True, null=True)
 
     def __str__(self):
         return self.name
-    
+
+
+class Question(models.Model):
+    question = models.CharField(max_length=200)
+
+    def __str__(self):
+        return self.question
+
+
+class Options(models.Model):
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    A_B_option = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.A_B_option
+
+class Category(models.Model):
+    name = models.CharField(max_length=200)
+    number_of_tests = models.IntegerField()
+    time = models.IntegerField()
+
+    def __str__(self):
+        return self.name
+
+
+class CareerTest(models.Model):
+    name = models.CharField(max_length=100)
+    type = models.ForeignKey(Category, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
+
+
+class CareerTestItem(models.Model):
+    test = models.ForeignKey(CareerTest, on_delete=models.CASCADE)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    career = models.ForeignKey(Careers, on_delete=models.CASCADE, blank=True, null=True)
+
+
+class CareerTestResult(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    test = models.ForeignKey(CareerTest, on_delete=models.CASCADE)
+    answer = models.TextField(blank=True, null=True)
+    ai_analysis = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.user.email}, {self.test.name}"
+
 
 class RoadMaps(models.Model):
     careers_id = models.ForeignKey(Careers, on_delete=models.CASCADE, related_name='roadmaps_set')
@@ -33,26 +82,9 @@ class Body(models.Model):
 
     def __str__(self):  
         return self.name
-    
-
-class Question(models.Model):
-    question = models.CharField(max_length=200)
-    test_id = models.ForeignKey('Test', on_delete=models.CASCADE)
-
-    def __str__(self):
-        return self.question
 
 
-class Options(models.Model):
-    question_id = models.ForeignKey(Question, on_delete=models.CASCADE)
-    A_B_option = models.CharField(max_length=100)
-    
-    def __str__(self):
-        return self.A_B_option
-
-
-class Type(models.Model):   
-    
+class Type(models.Model):
     name = models.CharField(max_length=200)
     number_of_tests = models.IntegerField()
     time = models.IntegerField()
@@ -62,7 +94,6 @@ class Type(models.Model):
 
 
 class Test(models.Model):
-    careers_id = models.ForeignKey(Careers, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     type = models.ForeignKey(Type, on_delete=models.CASCADE)
 
@@ -70,24 +101,24 @@ class Test(models.Model):
         return self.name
 
 class TestItem(models.Model):
-    test_id = models.ForeignKey(Test, on_delete=models.CASCADE)
-    question_id = models.ForeignKey(Question, on_delete=models.CASCADE)
-    type_id = models.ForeignKey(Type, on_delete=models.CASCADE)
+    test = models.ForeignKey(Test, on_delete=models.CASCADE)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
 
-
-class Answer(models.Model):
-    user_id = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    test_item_id = models.ForeignKey(TestItem, on_delete=models.CASCADE)
-    score = models.IntegerField()
 
 class TestResult(models.Model):
-    user_id = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    test_id = models.ForeignKey(Test, on_delete=models.CASCADE)
-    score = models.IntegerField()
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    test = models.ForeignKey(Test, on_delete=models.CASCADE)
+    answer = models.TextField(blank=True, null=True)
+    ai_analysis = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.user.email}, {self.test.name}"
+
 
 class Course(models.Model):
     name = models.TextField()
     info = models.TextField()
+    image = models.FileField(upload_to='course', blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -95,15 +126,23 @@ class Course(models.Model):
 
 class Lesson(models.Model):
     title = models.CharField(max_length=200)
-    content = models.TextField()
-    video_url = models.URLField(max_length=100)
+    content = RichTextField()
+    video_url = models.FileField(max_length=100, upload_to="lesson_videos/")
     file_url = models.FileField(max_length=100, upload_to='lessons/')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    course_id = models.ForeignKey(Course, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.title
 
 class DoneCourse(models.Model):
-    user_id = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    course_id = models.ForeignKey(Course, on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
     points = models.PositiveIntegerField()
-    end_career = models.BooleanField(default=False)
+    end_course = models.BooleanField(default=False)
+
+
+    def __str__(self):
+        return f"{self.course.name} , {self.points} ta dars, {self.user.email}"
+
