@@ -5,8 +5,8 @@ from .models import Text
 
 load_dotenv()
 gpt_key = os.getenv("GPT_KEY")
-MODEL = "gpt-3.5-turbo"  # yoki  "gpt-4o"byudjetga qarab
-
+MODEL =  "gpt-4.1" # yoki  byudjetga qarab
+#  "gpt-3.5-turbo"
 client = OpenAI(api_key=gpt_key)
 
 def generate_gpt_response(user_message, system_field="system_text", text_field="prompt_text"):

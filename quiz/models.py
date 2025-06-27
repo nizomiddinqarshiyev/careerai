@@ -110,6 +110,7 @@ class TestResult(models.Model):
     test = models.ForeignKey(Test, on_delete=models.CASCADE)
     answer = models.TextField(blank=True, null=True)
     ai_analysis = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     def __str__(self):
         return f"{self.user.email}, {self.test.name}"

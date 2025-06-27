@@ -1,13 +1,14 @@
-
+from django.contrib.auth import get_user_model
 from django.shortcuts import render
 from rest_framework.views import APIView
 
+from users.serializers import UserSerializer, CustomUser
 from .models import Options, Question, Type, Test, Careers, RoadMaps, Body, TestItem, TestResult, Lesson, Course, \
     DoneCourse, CareerTest, CareerTestResult, CareerTestItem
 from .serializers import OptionsSerializer, QuestionSerializer, TypeSerializer, TestSerializer, CareersSerializer, \
     RoadMapsSerializer, BodySerializer, CareerTestItemSerializer, LessonSerializer, CourseSerializer, \
     DoneCourseSerializer, \
-    DoneCoursePOSTSerializer, TestResultSerializer, TestItemSerializer, CareerTestResultSerializer
+    DoneCoursePOSTSerializer, TestResultSerializer, TestItemSerializer, CareerTestResultSerializer, DashboardSerializer
 from rest_framework import generics, viewsets
 from rest_framework import permissions
 # Create your views here.
@@ -18,7 +19,7 @@ from .models import TestResult, Test
 from .serializers import TestResultSerializer
 from ai.ai import chatbot_first
 
-
+User = get_user_model()
 
 
 class OptionsListView(generics.ListCreateAPIView):
@@ -122,6 +123,15 @@ class TestResultView(generics.ListCreateAPIView):
     queryset = TestResult.objects.all()
     serializer_class = TestResultSerializer
     permission_classes = [permissions.IsAuthenticated]
+    # def get(self, request, *args, **kwargs):
+    #     user = self.request.user
+    #     test_id = request.data.get('test_id')
+    #     try:
+    #         test_result_data = TestResult.objects.filter(test_id=test_id, user_id=user.id)
+    #     except TestResult.DoesNotExist:
+    #         return Response(status=status.HTTP_404_NOT_FOUND)
+    #     print(test_result_data)
+    #     return Response({TestResultSerializer(test_result_data).data}, status=status.HTTP_200_OK)
 
 # class TestResultListCreateAPIView(generics.ListCreateAPIView):
 #     serializer_class = TestResultSerializer
@@ -167,8 +177,9 @@ class AnalyzeTestResultAPIView(APIView):
     def post(self, request):
         user = request.user
         test_id = request.data.get('test_id')
+        # test_id = 2
         answer = request.data.get('answer')
-
+        print(test_id)
         # Test mavjudligini tekshiramiz
         try:
             test = Test.objects.get(id=test_id)
@@ -259,3 +270,69 @@ class CourseListCreateAPIView(generics.ListCreateAPIView):
 class CourseRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
+
+
+
+
+class DashboardAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        try:
+            courses = Course.objects.all()
+            users = CustomUser.objects.all()
+            donecourses = DoneCourse.objects.all()
+            types = TypeSerializer(read_only=True, many=True)
+            lessons = Lesson.objects.all()
+            tests = Test.objects.all()
+            test_results = TestResult.objects.all()
+            careers = Careers.objects.all()
+        except Exception as e:
+            return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        users_data = UserSerializer(users, many=False).data
+        donecourses_data = DoneCourseSerializer(donecourses, many=False).data
+        lessons_data = LessonSerializer(lessons, many=False).data
+        test_results_data = TestResultSerializer(test_results, many=False).data
+        careers_data = CareersSerializer(careers, many=False).data
+        tests_data = TestSerializer(tests, many=False).data
+        courses_data = CourseSerializer(courses, many=False).data
+        types_data = TypeSerializer(types, many=False).data
+
+        data = {
+            "users": users_data,
+            "donecourses": donecourses_data,
+            "lessons": lessons_data,
+            "test_results": test_results_data,
+            "careers": careers_data,
+            "tests": tests_data,
+            "courses": courses_data,
+            "types": types_data,
+        }
+
+        dashboard_serializer = DashboardSerializer(data)
+        return Response(dashboard_serializer.data, status=status.HTTP_200_OK)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

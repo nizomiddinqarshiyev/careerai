@@ -122,12 +122,34 @@ class DoneCoursePOSTSerializer(serializers.ModelSerializer):
         fields = ['id', 'course', 'user', 'points', 'end_course', 'course_id', 'user_id']
 
 
-class TestResultPOSTSerializer(serializers.ModelSerializer):
-    test = TestSerializer(read_only=True, many=False)
-    user = UserSerializer(read_only=True, many=False)
-    class Meta:
-        model = TestResult
-        fields = '__all__'
+# class TestResultPOSTSerializer(serializers.ModelSerializer):
+#     test = TestSerializer(read_only=True, many=False)
+#     user = UserSerializer(read_only=True, many=False)
+#     class Meta:
+#         model = TestResult
+#         fields = '__all__'
+#
+#     def save(self, **kwargs):
+#         ai_analysis = chatbot_first(self.answer, Text.objects.all()[0])
 
-    def save(self, **kwargs):
-        ai_analysis = chatbot_first(self.answer, Text.objects.all()[0])
+
+
+
+
+
+class DashboardSerializer(serializers.Serializer):
+    users = UserSerializer(read_only=True, many=False)
+    courses = CourseSerializer(read_only=True, many=False)
+    careers = CareersSerializer(read_only=True, many=False)
+    lessons = LessonSerializer(read_only=True, many=False)
+    donecourses = DoneCourseSerializer(read_only=True, many=False)
+    types = TypeSerializer(read_only=True, many=False)
+    tests = TestSerializer(read_only=True, many=False)
+    test_results = TestResultSerializer(read_only=True, many=False)
+
+
+
+
+
+
+

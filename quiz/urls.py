@@ -1,10 +1,12 @@
 from django.urls import path
+
+from .test import AddTestAPIView
 from .views import OptionsListView, OptionsDetailView, QuestionListView, QuestionDetailView, TypeListView, \
     TypeDetailView, TestListView, TestDetailView, CareersListView, CareersDetailView, RoadMapsListView, \
     RoadMapsDetailView, BodyListView, BodyDetailView, TestItemDetailView, TestItemCreateView, TestItemListView, \
     TestResultView, CourseListCreateAPIView, CourseRetrieveUpdateDestroyAPIView, LessonListCreateAPIView, \
     LessonRetrieveUpdateDestroyAPIView, DoneCourseListCreateAPIView, DoneCourseRetrieveUpdateDestroyAPIView, \
-    AnalyzeTestResultAPIView, CareerTestItemCareersListView, AnalyzeCareerTestResultAPIView
+    AnalyzeTestResultAPIView, CareerTestItemCareersListView, AnalyzeCareerTestResultAPIView, DashboardAPIView
 
 urlpatterns = [
     path('options/', OptionsListView.as_view(), name='options-list'),
@@ -41,4 +43,7 @@ urlpatterns = [
     path('done-courses/', DoneCourseListCreateAPIView.as_view(), name='done-course-list-create'),
     path('done-courses/<int:pk>/', DoneCourseRetrieveUpdateDestroyAPIView.as_view(), name='done-course-detail'),
 
+    path('add-test/', AddTestAPIView.as_view(), name='test-item-create'),
+
+    path('dashboard/', DashboardAPIView.as_view(), name='dashboard'),
 ]
